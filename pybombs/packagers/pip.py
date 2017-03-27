@@ -33,8 +33,9 @@ class ExternalPip(ExternPackager):
     """
     Wrapper for pip
     """
-    def __init__(self, logger):
+    def __init__(self, logger, is_virtualenv=False):
         ExternPackager.__init__(self, logger)
+        self.is_virtualenv = is_virtualenv
 
     def get_available_version(self, pkgname):
         """
@@ -107,7 +108,7 @@ class ExternalPip(ExternPackager):
                 command.append('--upgrade')
             command.append(pkgname)
             self.log.debug("Calling `{cmd}'".format(cmd=" ".join(command)))
-            subproc.monitor_process(command, elevate=True)
+            subproc.monitor_process(command, elevate=not self.is_virtualenv)
             self.load_install_cache()
             return True
         except Exception as e:
@@ -124,7 +125,8 @@ class Pip(ExternCmdPackagerBase):
 
     def __init__(self):
         ExternCmdPackagerBase.__init__(self)
-        self.packager = ExternalPip(self.log)
+        self.packager = ExternalPip(self.log,
+                                    self.cfg.get_active_prefix().is_virtualenv)
 
     def supported(self):
         """
